@@ -17,6 +17,7 @@ outList = runJieba(in_str)
 print(outList)
 #print([' | '.join(p) for p in outList])
 outList = txtCleaner(outList)
+inputWords = outList
 #print(outList)
 #print([p for p in outList])
 #outList = [p for p in outList]
@@ -27,3 +28,7 @@ knownList = getTableAsList(connectServer(), 'knownwords', 'word')
 outList = unknownWords(outList, knownList)
 wordfreq = listFreq(outList)
 print(wordfreq)
+knownratio = (len(inputWords) - len(wordfreq))/ len(inputWords)
+print("Percentage of words known: ", knownratio)
+
+#tocflList = getTableAsList(connectServer(), 'tocfl_list', 'tocfl_word')
