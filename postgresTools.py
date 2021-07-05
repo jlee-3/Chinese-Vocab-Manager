@@ -26,11 +26,21 @@ def createTable(conn):
     """)
     conn.commit()
 
+#create temp list (table with single col)
+#for performing filtering
+def createTempTable(conn, tbname, colname, listtype):
+    cur = conn.cursor()
+    cur.execute(f"""CREATE TABLE {tbname}(
+        {colname} {listtype} PRIMARY KEY
+    )
+    """)
+    conn.commit()
+
 #insert table
 def insertTable(conn, target_tb, source_tb):
     cur = conn.cursor()
     with open(PATH + source_tb, 'r') as f:
-        next(f) # Skip the header row.
+        #next(f) # Skip the header row.
         cur.copy_from(f, target_tb, sep=',')
     conn.commit()
 
@@ -41,11 +51,32 @@ def getTableAsList(conn, tb, col):
     tbList = cur.fetchall()
     return [w for rowList in tbList for w in rowList]
 
+#filter table by list
+def listFilter(conn, tb, l): #tb: table to be filtered, l: input list
+    cur = conn.cursor()
+    #create temp table
+    tempTb = 'templist'
+    tempTbCol = 'word'
+    ### ADD CHECK IF TEMP TABLE ALREADY EXISTS
+    createTempTable(conn, tempTb, tempTbCol, 'text')
+    insertTable(conn, tempTb, l)
+    cur.execute(f"""SELECT * from {tb} as ttb(col1)
+        where col1 in (
+        select {tempTbCol} from {tempTb}
+	    )
+    """)
+    tbList = cur.fetchall()
+    ### ADD DELETE TABLE DATA FUNCTION
+    return [w for rowList in tbList for w in rowList]
+
 if __name__ == "__main__":
     conn = connectServer()
     #createTable(conn)
     #insertTable(conn, 'knownwords', 'knownwords.csv')
     #insertTable(conn, 'tocfl_list', 'tocflwords.csv')
-    l = getTableAsList(conn, 'knownwords', 'word')
-    print("word list length: %d" % len(l))
-    print(l)
+    # l = getTableAsList(conn, 'knownwords', 'word')
+    # print("word list length: %d" % len(l))
+    # print(l)
+    tempTb = 'templist'
+    tempTbCol = 'word'
+    createTempTable(conn, tempTb, tempTbCol, 'text')
